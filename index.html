@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body style="margin: 0;">
+  <canvas id="canvas" style="display: block; background-color: aliceblue;">dfsdf</canvas>
+  <script>
+    var
+      canvas = document.getElementById("canvas"),
+      ctx = canvas.getContext('2d'),
+      mousedown = false
+    paintCords = []
+
+    canvas.addEventListener('mousedown', () => {
+      mousedown = true
+    })
+    canvas.addEventListener('mouseup', () => {
+      mousedown = false
+      ctx.beginPath()
+    })
+
+    canvas.width = window.innerWidth
+    canvas.height = window.innerHeight
+    canvas.addEventListener('mousemove', function (e) {
+      if (mousedown) {
+        paintCords.push([e.clientX, e.clientY])
+
+        ctx.lineTo(e.clientX, e.clientY)
+        ctx.stroke()
+
+        ctx.beginPath()
+        ctx.arc(e.clientX, e.clientY, 5, 0, Math.PI * 2)
+        ctx.fill()
+
+        ctx.beginPath()
+        ctx.lineWidth = 10
+        ctx.moveTo(e.clientX, e.clientY)
+      }
+    })
+
+    function savePaint() {
+      localStorage.setItem('paintCords', JSON.stringify(paintCords))
+    }
+    function replayPaint() {
+      var
+        count = 0,
+        timer = setInterval(function () {
+          if (!paintCords.length) {
+            clearInterval(timer)
+            ctx.beginPath()
+            return;
+          }
+          var
+            crd = paintCords[count]
+            x = crd['0'],
+            y = crd['1']
+          count++
+          ctx.lineTo(x, y)
+          ctx.stroke()
+
+          ctx.beginPath()
+          ctx.arc(x, y, 5, 0, Math.PI * 2)
+          ctx.fill()
+
+          ctx.beginPath()
+          ctx.lineWidth = 10
+          ctx.moveTo(x, y)
+        }, 30);
+    }
+    function clearPaint() {
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight)
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.keyCode == 83) {
+        savePaint()
+        console.log('saved');
+        console.log(paintCords);
+      }
+
+      if (e.keyCode == 82) {
+        console.log('replaying ...');
+        paintCords = localStorage.getItem('paintCords')
+        clearPaint()
+        replayPaint()
+      }
+
+      if (e.keyCode == 67) {
+        console.log('cleared');
+        clearPaint()
+      }
+
+    })
+
+
+
+
+  </script>
+
+</body>
+
+</html>
