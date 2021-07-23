@@ -9,12 +9,17 @@
 </head>
 
 <body style="margin: 0;">
-  <canvas id="canvas" style="display: block; background-color: aliceblue;">dfsdf</canvas>
+  <header>
+    <toolbar>
+      <input type="color" name="drawColor">
+    </toolbar>
+  </header>
+  <canvas id="canvas" style="display: block; background-color: aliceblue;"></canvas>
   <script>
     var
       canvas = document.getElementById("canvas"),
       ctx = canvas.getContext('2d'),
-      mousedown = false
+      mousedown = false,
     paintCords = []
 
     canvas.addEventListener('mousedown', () => {
@@ -23,70 +28,75 @@
     canvas.addEventListener('mouseup', () => {
       mousedown = false
       ctx.beginPath()
+      paintCords.push('')
     })
 
     canvas.width = window.innerWidth
-    canvas.height = window.innerHeight
-    canvas.addEventListener('mousemove', function (e) {
-      if (mousedown) {
-        paintCords.push([e.clientX, e.clientY])
+    canvas.height = window.innerHeight-30
 
-        ctx.lineTo(e.clientX, e.clientY)
+    function drawLine(x,y,width=10,color='black'){
+        ctx.lineTo(x,y)
         ctx.stroke()
 
         ctx.beginPath()
-        ctx.arc(e.clientX, e.clientY, 5, 0, Math.PI * 2)
+        ctx.fillStyle = color
+        ctx.arc(x,y, width/2, 0, Math.PI * 2)
         ctx.fill()
 
         ctx.beginPath()
-        ctx.lineWidth = 10
-        ctx.moveTo(e.clientX, e.clientY)
+        ctx.strokeStyle=color
+        ctx.lineWidth = width
+        ctx.moveTo(x, y)
+    }
+
+    canvas.addEventListener('mousemove', function (e) {
+      if (mousedown) {
+        paintCords.push([e.clientX,e.clientY-30])
+        drawLine(e.clientX,e.clientY-30,20,'green')
       }
     })
 
     function savePaint() {
       localStorage.setItem('paintCords', JSON.stringify(paintCords))
     }
+
     function replayPaint() {
       var
+        crd = [],
         count = 0,
         timer = setInterval(function () {
           if (!paintCords.length) {
             clearInterval(timer)
             ctx.beginPath()
+            console.log('nothing to save')
             return;
           }
-          var
+          //console.log(count,paintCords)
+          if (paintCords[count]) {
             crd = paintCords[count]
-            x = crd['0'],
-            y = crd['1']
-          count++
-          ctx.lineTo(x, y)
-          ctx.stroke()
+            count++
+            drawLine(crd[0],crd[1])
+          }
+          else{
+            clearInterval(timer)
+            return;
+          }
 
-          ctx.beginPath()
-          ctx.arc(x, y, 5, 0, Math.PI * 2)
-          ctx.fill()
-
-          ctx.beginPath()
-          ctx.lineWidth = 10
-          ctx.moveTo(x, y)
-        }, 30);
+        }, 100);
     }
     function clearPaint() {
-      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight)
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight-30)
     }
 
     document.addEventListener('keydown', (e) => {
       if (e.keyCode == 83) {
         savePaint()
         console.log('saved');
-        console.log(paintCords);
       }
 
       if (e.keyCode == 82) {
         console.log('replaying ...');
-        paintCords = localStorage.getItem('paintCords')
+        paintCords = JSON.parse(localStorage.getItem('paintCords'))
         clearPaint()
         replayPaint()
       }
